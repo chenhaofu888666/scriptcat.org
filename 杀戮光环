@@ -1,0 +1,158 @@
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+local Humanoid = Character:WaitForChild("Humanoid")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local LookEvent = ReplicatedStorage:WaitForChild("Look")
+local SwingEvent = Character:WaitForChild("Fists"):WaitForChild("EventsFolder"):WaitForChild("Swing")
+
+local insanePoses = {
+    {
+        CFrame.new(0, 3, 0, -1, 0, 0, 0, 0, 1, 0, 1, 0) * CFrame.Angles(math.rad(45), 0, 0),
+        CFrame.new(3, 0, 0, -1, 0, 0, 0, 0, 1, 0, 1, 0) * CFrame.Angles(0, 0, math.rad(-135)),
+        CFrame.new(-3, 0, 0, -1, 0, 0, 0, 0, 1, 0, 1, 0) * CFrame.Angles(0, 0, math.rad(135))
+    },
+    
+    {
+        CFrame.new(0, 2, -2, -0.5, 0, -0.866, 0, 1, 0, 0.866, 0, -0.5) * CFrame.Angles(math.rad(-30), 0, 0),
+        CFrame.new(4, 1, -3, -0.5, 0, -0.866, 0, 1, 0, 0.866, 0, -0.5) * CFrame.Angles(0, math.rad(-90), math.rad(-180)),
+        CFrame.new(-4, 1, -3, 0.5, 0, 0.866, 0, 1, 0, -0.866, 0, 0.5) * CFrame.Angles(0, math.rad(90), math.rad(180))
+    },
+    
+    {
+        CFrame.new(0, 1.5, 1, 0, 0, -1, 0, 1, 0, 1, 0, 0) * CFrame.Angles(math.rad(-45), 0, 0),
+        CFrame.new(3, 0.5, 2, -0.707, 0, -0.707, 0, 1, 0, 0.707, 0, -0.707) * CFrame.Angles(0, math.rad(-45), math.rad(-90)),
+        CFrame.new(-3, 0.5, 2, 0.707, 0, 0.707, 0, 1, 0, -0.707, 0, 0.707) * CFrame.Angles(0, math.rad(45), math.rad(90))
+    },
+    
+    {
+        CFrame.new(0, 4, -1, 0, 0, -1, 0, 1, 0, 1, 0, 0) * CFrame.Angles(math.rad(-90), 0, 0),
+        CFrame.new(5, 2, -4, -0.5, 0, -0.866, 0, 1, 0, 0.866, 0, -0.5) * CFrame.Angles(0, math.rad(-120), math.rad(-270)),
+        CFrame.new(-5, 2, -4, 0.5, 0, 0.866, 0, 1, 0, -0.866, 0, 0.5) * CFrame.Angles(0, math.rad(120), math.rad(270))
+    }
+}
+
+local insaneAttacks = {
+    -- 肢解攻击
+    {
+        "Left Arm",
+        666,
+        {
+            HitMode = "Dismember",
+            Hitter = "Left Arm",
+            DebounceTime = 0.1,
+            SoundPart = "Left Arm",
+            HitBoxTime = 10,
+            HitBoxStart = 0.01,
+            AnimSpeed = 5.0,
+            ComboEndTime = 999,
+            Damage = 500,
+            Effect = "Decapitate"
+        }
+    },
+    
+    {
+        "Torso",
+        999,
+        {
+            HitMode = "Apocalypse",
+            Hitter = "Torso",
+            DebounceTime = 0.05,
+            SoundPart = "Torso",
+            HitBoxTime = 15,
+            HitBoxStart = 0.01,
+            AnimSpeed = 10.0,
+            ComboEndTime = 0,
+            Damage = 1000,
+            Radius = 50,
+            Effect = "Nuke"
+        }
+    },
+    
+    {
+        "Right Arm",
+        777,
+        {
+            HitMode = "Lightning",
+            Hitter = "Right Arm",
+            DebounceTime = 0.01,
+            SoundPart = "Right Arm",
+            HitBoxTime = 5,
+            HitBoxStart = 0.001,
+            AnimSpeed = 20.0,
+            ComboEndTime = 0.01,
+            Damage = 250,
+            ChainHits = 10
+        }
+    },
+    
+    {
+        "Head",
+        555,
+        {
+            HitMode = "SoulRip",
+            Hitter = "Head",
+            DebounceTime = 0.2,
+            SoundPart = "Head",
+            HitBoxTime = 20,
+            HitBoxStart = 0.005,
+            AnimSpeed = 7.0,
+            ComboEndTime = 999,
+            Damage = 750,
+            Effect = "SoulSteal"
+        }
+    }
+}
+
+local function enhancePose(pose, intensity)
+    local function randomCFrame()
+        return CFrame.new(
+            (math.random() - 0.5) * intensity * 10,
+            (math.random() - 0.5) * intensity * 5,
+            (math.random() - 0.5) * intensity * 10
+        ) * CFrame.Angles(
+            math.rad((math.random() - 0.5) * 90 * intensity),
+            math.rad((math.random() - 0.5) * 180 * intensity),
+            math.rad((math.random() - 0.5) * 360 * intensity)
+        )
+    end
+    
+    return {
+        pose[1] * randomCFrame(),
+        pose[2] * randomCFrame(),
+        pose[3] * randomCFrame()
+    }
+end
+
+local function executeInsaneKill()
+    local pose = insanePoses[math.random(1, #insanePoses)]
+    
+    local enhancedPose = enhancePose(pose, 1.5)
+    LookEvent:FireServer(unpack(enhancedPose))
+    
+    for _, attack in ipairs(insaneAttacks) do
+        SwingEvent:FireServer(unpack(attack))
+    end
+    
+    local shockwave = {
+        CFrame.new(0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1),
+        CFrame.new(0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1),
+        CFrame.new(0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1),
+        Effect = "Shockwave",
+        Radius = 100,
+        Duration = 5
+    }
+    LookEvent:FireServer(unpack(shockwave))
+    
+    wait(0.1)
+end
+
+while true do
+    executeInsaneKill()
+    wait(0.5)
+    
+    for i = 1, math.random(0, 3) do
+        executeInsaneKill()
+        wait(0.1)
+    end
+    
